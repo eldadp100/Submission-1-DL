@@ -89,7 +89,7 @@ for epoch_num in range(epochs):
         xs, ys = batch
         xs.requires_grad_()
         ys_pred = net(xs)
-        loss = loss_fn(ys_pred, ys.type(torch.LongTensor))
+        loss = loss_fn(ys_pred, torch.argmax(ys, dim=1))
 
         optimizer.zero_grad()
         loss.backward()
