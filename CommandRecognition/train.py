@@ -107,8 +107,9 @@ torch.save(net.state_dict(), checkpoint_path)
 epoch_losses = []
 for batch in dl_test:
     xs, ys = batch
+    xs, ys = xs.to(device), ys.to(device)
     ys_pred = net(xs)
-    loss = loss_fn(ys, ys_pred)
+    loss = loss_fn(ys_pred, torch.argmax(ys, dim=1))
     epoch_losses.append(loss)
 
 print(np.mean(epoch_losses))
