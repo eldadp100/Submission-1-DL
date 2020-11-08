@@ -48,18 +48,21 @@ def index_to_label(index):
     return labels[index]
 
 
-def pad_sequence(batch):
-    # Make all tensor in a batch the same length by padding with zeros
-    batch = [item.t() for item in batch]
-    batch = torch.nn.utils.rnn.pad_sequence(batch, batch_first=True, padding_value=0.)
-    return batch.permute(0, 2, 1)
+def pad_sequence(batch, to_size=16000):
+    # batch = torch.nn.utils.rnn.pad_sequence(batch, batch_first=True, padding_value=0.)
+    # what if max size element in the batch is less than 16000? The following is better...
+
+    batch_tensor = torch.zeros(len(batch), to_size)
+    for i in range(len(batch)):
+        batch_tensor[i, 0:batch[i].shape[0]] = batch[i]
+    return batch_tensor.reshape(len(batch), 1, to_size)
 
 
 def collate_fn(batch):
     tensors, targets = [], []
     # Gather in lists, and encode labels as indices
     for waveform, _, label, _, _ in batch:
-        tensors += [waveform]
+        tensors += [torch.squeeze(waveform)]
         target = torch.zeros(len(labels))
         target[label_to_index(label)] = 1.
         targets += [target]
@@ -86,7 +89,7 @@ for epoch_num in range(epochs):
         xs, ys = batch
         xs.requires_grad_()
         ys_pred = net(xs)
-        loss = loss_fn(ys_pred, ys)
+        loss = loss_fn(ys_pred, ys.type(torch.LongTensor))
 
         optimizer.zero_grad()
         loss.backward()
